@@ -1,8 +1,13 @@
 # dsh-background-image
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![DSH](https://img.shields.io/badge/DeepSeek%20Harness-0.1.0--rc.6-3964fe)](https://github.com/deepseek-ai/deepseek-harness)
+[![Status](https://img.shields.io/badge/status-stable-brightgreen)](#)
+
 A **static bundle plugin** for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
 Web GUI that adds a "背景图 / Background" settings page for customizing the
-application background. Installed once, it survives restarts.
+application background. Installed once, it survives restarts — and remembers
+your last background across them.
 
 > **Unofficial project.** Not affiliated with or endorsed by DeepSeek.
 > Tested on DeepSeek Harness `0.1.0-rc.6`.
@@ -46,6 +51,11 @@ Requires [pnpm](https://pnpm.io/) (`npm install -g pnpm`).
 From this repository (local checkout or after cloning):
 
 ```powershell
+# 1. Install the plugin's own dependencies (schemastery)
+cd C:\path\to\dsh-background-image
+npm install
+
+# 2. Link it into the web profile
 dsh plugin --profile web add link:C:\path\to\dsh-background-image
 ```
 
