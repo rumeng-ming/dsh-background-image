@@ -18,15 +18,20 @@ application background. Installed once, it survives restarts.
 - **Image size controls** — fit window (cover), full display (contain), or a
   custom 30–200 % scale slider
 - **Light/dark aware** — separate light and dark values per color scheme
+- **Persistence** — the last background is saved through the DSH `settings`
+  service and restored automatically after a restart
 
 ## How it works
 
 One dual-face bundle row (`cordis.patch.yml`):
 
 - **Host half** (`lib/index.js`) — a Cordis plugin (`inject: fs, webServer`)
-  registering two HTTP routes: `GET /dyn-bgimg/background` (serve the
-  in-memory image) and `POST /dyn-bgimg/load` (read a local image file into
-  memory and return its URL).
+  registering four HTTP routes: `GET /dyn-bgimg/background` (serve the
+  in-memory image), `POST /dyn-bgimg/load` (read a local image file into
+  memory and return its URL), and `POST /dyn-bgimg/save` +
+  `GET /dyn-bgimg/state` (persist/restore the last background through the
+  `settings` service; falls back to in-memory storage without a settings
+  provider).
 - **Browser half** (`lib/client.js`) — a `window.__ModuleLoader__.load`
   bundle picked up by the `dsh.client` declaration (platform `web`). It
   registers the settings page, talks to the Host via `fetch`, and renders the
@@ -60,24 +65,26 @@ dsh plugin --profile web remove dsh-background-image
 
 ## Configuration
 
-To auto-apply a local image when the page loads, set `DEFAULT_IMAGE` at the
-top of `lib/client.js` (e.g. `"C:\\Users\\you\\Desktop\\bg.jpg"`); leave it
-empty to disable auto-loading.
+To auto-apply a local image on **first** launch (before any background has been
+saved), set `DEFAULT_IMAGE` at the top of `lib/client.js` (e.g.
+`"C:\\Users\\you\\Desktop\\bg.jpg"`); leave it empty to disable auto-loading.
+Once a background is applied, it is persisted and takes precedence.
 
 ## Requirements
 
 - DeepSeek Harness `0.1.0-rc.6` (APIs are unstable pre-1.0; other versions may break)
 - A profile providing `fs` and `webServer` on the Host (the shipped `web`
-  profile does) and `dsh-client-ui-theme` / `dsh-client-ui-slots` on the Client.
+  profile does) and `dsh-client-ui-theme` / `dsh-client-ui-conversation` on the Client.
 
 ## Repository layout
 
 ```
 ├── package.json           # dsh.bundle + dsh.client declarations
 ├── cordis.patch.yml       # the bundle's one dual-face row
+├── CHANGELOG.md
 ├── lib/
-│   ├── index.js           # Host half
-│   └── client.js          # Browser half
+│   ├── index.js           # Host half (image routes + settings persistence)
+│   └── client.js          # Browser half (settings page + restore)
 └── legacy-dynamic/        # earlier dynamic-plugin source (archived)
 ```
 
