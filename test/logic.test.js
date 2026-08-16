@@ -8,7 +8,8 @@ import {
   MIME,
   parseImagePath,
   normalizeSaveState,
-  sanitizeSavedState
+  sanitizeSavedState,
+  isPathInsideDir
 } from "../lib/logic.js"
 
 // ── constants ────────────────────────────────────────────────────────────────
@@ -120,6 +121,36 @@ test("sanitizeSavedState fills defaults for missing fields", () => {
 test("sanitizeSavedState keeps imagePath only when it is a non-empty string", () => {
   assert.equal(sanitizeSavedState({ kind: "image", imagePath: "C:\\pics\\bg.png" }).imagePath, "C:\\pics\\bg.png")
   assert.equal("imagePath" in sanitizeSavedState({ kind: "image", imagePath: "" }), false)
+})
+
+// ── directory whitelist containment ─────────────────────────────────────────
+
+test("isPathInsideDir accepts the directory itself and files below it", () => {
+  assert.equal(isPathInsideDir("C:\\Pics", "C:\\Pics"), true)
+  assert.equal(isPathInsideDir("C:\\Pics\\bg.png", "C:\\Pics"), true)
+  assert.equal(isPathInsideDir("C:\\Pics\\a\\b\\bg.png", "C:\\Pics"), true)
+})
+
+test("isPathInsideDir is case-insensitive and separator-agnostic", () => {
+  assert.equal(isPathInsideDir("c:\\pics\\bg.png", "C:\\Pics"), true)
+  assert.equal(isPathInsideDir("C:/pics/bg.png", "C:\\Pics"), true)
+  assert.equal(isPathInsideDir("C:\\PICS\\BG.PNG", "c:\\pics"), true)
+  assert.equal(isPathInsideDir("C:\\Pics\\", "C:\\Pics"), true)
+})
+
+test("isPathInsideDir rejects siblings sharing a prefix", () => {
+  assert.equal(isPathInsideDir("C:\\Pics2\\bg.png", "C:\\Pics"), false)
+  assert.equal(isPathInsideDir("C:\\Picturesque\\bg.png", "C:\\Pics"), false)
+})
+
+test("isPathInsideDir collapses '..' before comparing", () => {
+  assert.equal(isPathInsideDir("C:\\Pics\\..\\secret\\bg.png", "C:\\Pics"), false)
+  assert.equal(isPathInsideDir("C:\\Pics\\sub\\..\\bg.png", "C:\\Pics"), true)
+})
+
+test("isPathInsideDir rejects paths in the parent directory", () => {
+  assert.equal(isPathInsideDir("C:\\bg.png", "C:\\Pics"), false)
+  assert.equal(isPathInsideDir("C:\\Pics", "C:\\Pics\\sub"), false)
 })
 
 // ── round-trip ───────────────────────────────────────────────────────────────

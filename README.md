@@ -26,6 +26,14 @@ your last background across them.
 - **Light/dark aware** — separate light and dark values per color scheme
 - **Persistence** — the last background is saved through the DSH `settings`
   service and restored automatically after a restart
+- **Optional directory whitelist** — restrict local image loading to specific
+  directories (see [Configuration](#configuration))
+
+## Screenshot
+
+The Web GUI with the "极光紫 / Aurora" gradient preset applied:
+
+![Screenshot of the DeepSeek Harness Web GUI with the Aurora gradient background](docs/screenshot.jpg)
 
 ## How it works
 
@@ -81,6 +89,17 @@ saved), set `DEFAULT_IMAGE` at the top of `lib/client.js` (e.g.
 `"C:\\Users\\you\\Desktop\\bg.jpg"`); leave it empty to disable auto-loading.
 Once a background is applied, it is persisted and takes precedence.
 
+To restrict local image loading to specific directories (defense-in-depth;
+empty by default, which allows any path), populate `ALLOWED_DIRS` at the top of
+`lib/index.js`:
+
+```js
+const ALLOWED_DIRS = ["C:\\Users\\you\\Pictures", "D:\\Wallpapers"]
+```
+
+Paths are compared case-insensitively with normalized separators, and `..`
+segments are collapsed before comparison.
+
 ## Requirements
 
 - DeepSeek Harness `0.1.0-rc.6` (APIs are unstable pre-1.0; other versions may break)
@@ -109,6 +128,8 @@ CI runs `npm run check` + `npm test` on Node 18/20/22 for every push to
 ├── package.json           # dsh.bundle + dsh.client declarations
 ├── cordis.patch.yml       # the bundle's one dual-face row
 ├── CHANGELOG.md
+├── docs/
+│   └── screenshot.jpg     # README screenshot (Aurora gradient preset)
 ├── lib/
 │   ├── index.js           # Host half (image routes + settings persistence)
 │   ├── logic.js           # shared pure logic (validation + state mapping)

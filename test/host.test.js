@@ -6,7 +6,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import { apply } from "../lib/index.js"
+import { apply, ALLOWED_DIRS } from "../lib/index.js"
 
 const FAKE_BYTES = Buffer.from("fake-image-bytes")
 
@@ -256,4 +256,41 @@ test("state tolerates a missing local image and keeps the saved fallback", async
   const body = JSON.parse(res.body)
   assert.equal(body.ok, true)
   assert.equal(body.state.light, '#8a8f98 url("old-url")')
+})
+
+// ── directory whitelist (ALLOWED_DIRS) ───────────────────────────────────────
+
+test("directory whitelist is empty by default (original permissive behavior)", () => {
+  assert.deepEqual(ALLOWED_DIRS, [])
+})
+
+test("directory whitelist allows paths inside and blocks paths outside", async () => {
+  ALLOWED_DIRS.push("C:\\Users\\92991\\Pictures")
+  try {
+    const { routes } = bootHost()
+
+    const inside = fakeRes()
+    await findRoute(routes, "/dyn-bgimg/load").handler(jsonReq({ path: "C:\\Users\\92991\\Pictures\\bg.png" }), inside)
+    assert.equal(inside.status, 200)
+
+    const outside = fakeRes()
+    await findRoute(routes, "/dyn-bgimg/load").handler(jsonReq({ path: "C:\\Users\\92991\\Desktop\\bg.png" }), outside)
+    assert.equal(outside.status, 500)
+    assert.match(JSON.parse(outside.body).error, /不在允许的目录/)
+  } finally {
+    ALLOWED_DIRS.length = 0
+  }
+})
+
+test("directory whitelist defeats '..' traversal", async () => {
+  ALLOWED_DIRS.push("C:\\Users\\92991\\Pictures")
+  try {
+    const { routes } = bootHost()
+    const res = fakeRes()
+    await findRoute(routes, "/dyn-bgimg/load").handler(jsonReq({ path: "C:\\Users\\92991\\Pictures\\..\\Desktop\\bg.png" }), res)
+    assert.equal(res.status, 500)
+    assert.match(JSON.parse(res.body).error, /不在允许的目录/)
+  } finally {
+    ALLOWED_DIRS.length = 0
+  }
 })

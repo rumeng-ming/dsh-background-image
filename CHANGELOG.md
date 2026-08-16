@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   flow.
 - GitHub Actions CI (`.github/workflows/ci.yml`): syntax check + tests on
   Node 18/20/22 for every push and pull request.
+- Optional directory whitelist for local images (`ALLOWED_DIRS` in
+  `lib/index.js`, empty by default): restricts `POST /dyn-bgimg/load` to
+  configured directories, case-insensitive, with `..` segments collapsed.
+- README screenshot (`docs/screenshot.jpg`) showing the Aurora gradient preset.
 
 ### Changed
 
