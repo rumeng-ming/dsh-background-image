@@ -1,0 +1,7 @@
+# dsh-background-image bundle patch.
+# One dual-face row: the host Loader mounts its Host half (lib/index.js),
+# and the client-modules scan picks it up for the browser roster because the
+# package declares dsh.client (platform: web, exports "./client").
+- insert:
+    - id: bg-image
+      name: dsh-background-image

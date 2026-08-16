@@ -1,11 +1,11 @@
 # dsh-background-image
 
-A dynamic [Cordis](https://github.com/cordisjs/cordis) plugin for the
-[DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web GUI
-that lets you customize the application background from a settings page.
+A **static bundle plugin** for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
+Web GUI that adds a "背景图 / Background" settings page for customizing the
+application background. Installed once, it survives restarts.
 
-> **Unofficial project.** Not affiliated with or endorsed by DeepSeek. Tested
-> on DeepSeek Harness `0.1.0-rc.6`.
+> **Unofficial project.** Not affiliated with or endorsed by DeepSeek.
+> Tested on DeepSeek Harness `0.1.0-rc.6`.
 
 ## Features
 
@@ -13,66 +13,73 @@ that lets you customize the application background from a settings page.
 - **Solid colors** — native color picker
 - **Image URLs** — any direct image link
 - **Local images** — the Host half reads the file (png/jpg/jpeg/webp/gif,
-  ≤ 5 MB) and serves it over a package-registered HTTP route
-  (`/dyn-bgimg/background`), so the browser loads it as a normal same-origin URL
+  ≤ 5 MB) and serves it over `/dyn-bgimg/background`, a normal same-origin URL
 - **Opacity slider** — background strength 0–100 % keeps text readable
 - **Image size controls** — fit window (cover), full display (contain), or a
   custom 30–200 % scale slider
-- **Light/dark aware** — separate light and dark values, switching with the
-  active color scheme
+- **Light/dark aware** — separate light and dark values per color scheme
 
-## What "dynamic plugin" means
+## How it works
 
-This plugin runs as a **temporary in-process extension**: it is defined and
-activated inside a running DSH session and **does not survive a process
-restart**. That is by design of the dynamic-plugin mechanism, not a bug.
+One dual-face bundle row (`cordis.patch.yml`):
 
-This repository stores the plugin source (`host.js` + `client.js`) in readable
-form. To activate it inside DSH, ask your agent:
+- **Host half** (`lib/index.js`) — a Cordis plugin (`inject: fs, webServer`)
+  registering two HTTP routes: `GET /dyn-bgimg/background` (serve the
+  in-memory image) and `POST /dyn-bgimg/load` (read a local image file into
+  memory and return its URL).
+- **Browser half** (`lib/client.js`) — a `window.__ModuleLoader__.load`
+  bundle picked up by the `dsh.client` declaration (platform `web`). It
+  registers the settings page, talks to the Host via `fetch`, and renders the
+  background on an `html::before` layer at `z-index: -1` (guaranteed below all
+  app content). The app frame token (`--dsw-alias-bg-base`) is set to
+  `transparent` while a background is active and restored on stop.
 
-> 帮我加载 C:\Users\92991\dsh-plugins 里的 background-image 插件
+## Installation
 
-or paste the contents of `host.js` / `client.js` into the DSH dynamic-plugin
-panel (`cordis_define` + `cordis_run`).
+Requires [pnpm](https://pnpm.io/) (`npm install -g pnpm`).
 
-## Repository layout
+From this repository (local checkout or after cloning):
 
+```powershell
+dsh plugin --profile web add link:C:\path\to\dsh-background-image
 ```
-├── README.md
-├── LICENSE
-└── background-image/
-    ├── README.md          # usage & configuration
-    ├── host.js            # Host half (image reader + HTTP route)
-    └── client.js          # Client half (settings page)
+
+Or from a published registry package (not yet published):
+
+```powershell
+dsh plugin --profile web add dsh-background-image
+```
+
+Then **restart DSH**. The "背景图" section appears under Settings, permanently.
+
+Uninstall:
+
+```powershell
+dsh plugin --profile web remove dsh-background-image
 ```
 
 ## Configuration
 
-`background-image/host.js` and `background-image/client.js` each declare a
-`DEFAULT_IMAGE` constant:
-
-```js
-// Set to a local image path to auto-apply it on activation;
-// leave empty to disable auto-loading.
-const DEFAULT_IMAGE = ''
-```
-
-## How it renders
-
-The background is drawn on an `html::before` layer at `z-index: -1` — the root
-stacking context guarantees it sits above the canvas background and below all
-app content. The app frame background token (`--dsw-alias-bg-base`) is set to
-`transparent` while a background is active, and restored when the plugin stops.
+To auto-apply a local image when the page loads, set `DEFAULT_IMAGE` at the
+top of `lib/client.js` (e.g. `"C:\\Users\\you\\Desktop\\bg.jpg"`); leave it
+empty to disable auto-loading.
 
 ## Requirements
 
 - DeepSeek Harness `0.1.0-rc.6` (APIs are unstable pre-1.0; other versions may break)
-- Host composition providing `fs` and `webServer` (the shipped composition does)
+- A profile providing `fs` and `webServer` on the Host (the shipped `web`
+  profile does) and `dsh-client-ui-theme` / `dsh-client-ui-slots` on the Client.
 
-## Known limitations
+## Repository layout
 
-- Dynamic plugins do not persist: re-apply the background after a reload.
-- Remote image URLs may be blocked by hotlink protection; prefer local paths.
+```
+├── package.json           # dsh.bundle + dsh.client declarations
+├── cordis.patch.yml       # the bundle's one dual-face row
+├── lib/
+│   ├── index.js           # Host half
+│   └── client.js          # Browser half
+└── legacy-dynamic/        # earlier dynamic-plugin source (archived)
+```
 
 ## License
 
