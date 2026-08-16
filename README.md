@@ -1,6 +1,7 @@
 # dsh-background-image
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![CI](https://github.com/rumeng-ming/dsh-background-image/actions/workflows/ci.yml/badge.svg)](https://github.com/rumeng-ming/dsh-background-image/actions/workflows/ci.yml)
 [![DSH](https://img.shields.io/badge/DeepSeek%20Harness-0.1.0--rc.6-3964fe)](https://github.com/deepseek-ai/deepseek-harness)
 [![Status](https://img.shields.io/badge/status-stable-brightgreen)](#)
 
@@ -86,6 +87,22 @@ Once a background is applied, it is persisted and takes precedence.
 - A profile providing `fs` and `webServer` on the Host (the shipped `web`
   profile does) and `dsh-client-ui-theme` / `dsh-client-ui-conversation` on the Client.
 
+## Development
+
+```powershell
+npm test      # unit tests (node:test, no extra dependencies)
+npm run check # syntax check for every module
+```
+
+The tests cover the shared pure logic in `lib/logic.js` (path validation,
+save/restore mapping), the Host half's four HTTP routes against mocked
+`fs`/`webServer`/`settings` services, and the browser half's real bundle
+(loaded in a Node `vm` sandbox with a fake DOM) including the size mode,
+opacity clamping, CSS construction, restore flow, and cleanup on dispose.
+
+CI runs `npm run check` + `npm test` on Node 18/20/22 for every push to
+`main` and every pull request.
+
 ## Repository layout
 
 ```
@@ -94,7 +111,10 @@ Once a background is applied, it is persisted and takes precedence.
 ├── CHANGELOG.md
 ├── lib/
 │   ├── index.js           # Host half (image routes + settings persistence)
+│   ├── logic.js           # shared pure logic (validation + state mapping)
 │   └── client.js          # Browser half (settings page + restore)
+├── test/                  # unit + integration tests (node:test)
+├── .github/workflows/     # CI (syntax check + tests, Node 18/20/22)
 └── legacy-dynamic/        # earlier dynamic-plugin source (archived)
 ```
 

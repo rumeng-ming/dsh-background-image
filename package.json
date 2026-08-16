@@ -7,15 +7,21 @@
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
+    "./logic": "./lib/logic.js",
     "./client": "./lib/client.js",
     "./cordis.patch.yml": "./cordis.patch.yml",
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
+    "lib/logic.js",
     "lib/client.js",
     "cordis.patch.yml"
   ],
+  "scripts": {
+    "test": "node --test test/logic.test.js test/client.test.js test/host.test.js",
+    "check": "node --check lib/index.js && node --check lib/logic.js && node --check lib/client.js"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

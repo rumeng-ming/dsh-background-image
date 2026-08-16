@@ -10,12 +10,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Background persistence: the last applied background (preset, color, image URL,
   or local image path) is saved through the DSH `settings` service and restored
   automatically after a restart.
+- Unit and integration tests (`node:test`, run with `npm test`): path
+  validation, save/restore state mapping, size modes, opacity clamping, CSS
+  construction, the four Host HTTP routes, and the browser restore/cleanup
+  flow.
+- GitHub Actions CI (`.github/workflows/ci.yml`): syntax check + tests on
+  Node 18/20/22 for every push and pull request.
 
 ### Changed
 
 - Image size controls (fit window / full display / custom scale) are now always
   visible in the settings page; they are disabled with a hint until an image
   background is applied.
+- Shared pure logic extracted into `lib/logic.js` (zero dependencies) and the
+  browser half's pure helpers (`sizeOf`, opacity clamp, CSS builder) factored
+  out for testability; runtime behavior is unchanged.
 
 ## [0.1.0] - 2026-08-16
 
